@@ -6,3 +6,5 @@ google-generativeai
 python-dotenv
 toml
 pydantic
+fastapi
+uvicorn

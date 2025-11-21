@@ -3,9 +3,9 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: sea-agent-app
+    container_name: sea-agent-backend
     ports:
-      - "8501:8501"
+      - "8000:8000"
     depends_on:
       - chromadb
     environment:
