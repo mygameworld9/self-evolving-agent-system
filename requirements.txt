@@ -1,0 +1,8 @@
+streamlit
+openai
+pandas
+chromadb
+google-generativeai
+python-dotenv
+toml
+pydantic

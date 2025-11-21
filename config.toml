@@ -1,0 +1,32 @@
+[llm.openai]
+# Default OpenAI settings. Can be overridden by env vars.
+base_url = "https://api.openai.com/v1"
+# api_key is loaded from env var OPENAI_API_KEY
+
+[llm.google]
+# api_key is loaded from env var GOOGLE_API_KEY
+
+[models]
+# List of available models for selection in UI
+options = [
+    "gpt-4o",
+    "gpt-4-turbo",
+    "gpt-3.5-turbo",
+    "gemini-1.5-pro-latest",
+    "gemini-1.5-flash-latest"
+]
+
+[models.defaults]
+attacker = "gpt-4o"
+defender = "gpt-4o"
+judge = "gpt-4o"
+
+[storage]
+type = "chroma"
+host = "chromadb" # Hostname in Docker network
+port = 8000
+collection_name = "sea_memories"
+
+[agent]
+cycle_limit = 5 # Max turns in a battle
+memory_path = "./data/memory_bank.json" # Fallback/Local path
