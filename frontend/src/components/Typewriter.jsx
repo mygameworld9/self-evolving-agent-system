@@ -5,18 +5,32 @@ const Typewriter = ({ text, speed = 10, onComplete }) => {
 
     useEffect(() => {
         setDisplayedText('');
-        let i = 0;
-        const timer = setInterval(() => {
-            if (i < text.length) {
-                setDisplayedText((prev) => prev + text.charAt(i));
-                i++;
+        const startTime = Date.now();
+        let timer = null;
+
+        const updateText = () => {
+            const now = Date.now();
+            const elapsed = now - startTime;
+            const charCount = Math.floor(elapsed / speed);
+
+            if (charCount < text.length) {
+                setDisplayedText(text.substring(0, charCount + 1));
             } else {
-                clearInterval(timer);
+                setDisplayedText(text);
+                if (timer) clearInterval(timer);
                 if (onComplete) onComplete();
             }
-        }, speed);
+        };
 
-        return () => clearInterval(timer);
+        // Run immediately
+        updateText();
+
+        // Set interval for updates
+        timer = setInterval(updateText, speed);
+
+        return () => {
+            if (timer) clearInterval(timer);
+        };
     }, [text, speed]);
 
     return <span>{displayedText}</span>;

@@ -136,7 +136,7 @@ function BattleArena() {
 
                 <div className="history-feed">
                     {status?.history?.slice().reverse().map((log, i) => (
-                        <div key={i} className={`log-entry ${log.breach ? 'breach' : 'blocked'}`}>
+                        <div key={log.round} className={`log-entry ${log.breach ? 'breach' : 'blocked'}`}>
                             <div className="log-header">
                                 <span className="round-badge">Round {log.round}</span>
                                 <span className="status-badge">
