@@ -1,4 +1,6 @@
 import os
+import sys
+print(f"DEBUG: Python Version: {sys.version}")
 import toml
 from pydantic import BaseModel, Field
 from typing import Optional

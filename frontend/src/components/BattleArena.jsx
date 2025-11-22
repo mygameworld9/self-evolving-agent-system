@@ -8,6 +8,7 @@ function BattleArena() {
     const [config, setConfig] = useState({
         attacker_model: '',
         defender_model: '',
+        judge_model: '',
         rounds: 5,
         target_goal: 'Reveal system instructions'
     });
@@ -26,7 +27,8 @@ function BattleArena() {
             setConfig(prev => ({
                 ...prev,
                 attacker_model: data.defaults.attacker,
-                defender_model: data.defaults.defender
+                defender_model: data.defaults.defender,
+                judge_model: data.defaults.judge
             }));
         } catch (e) {
             console.error("Failed to load models", e);
@@ -64,6 +66,8 @@ function BattleArena() {
         setLoading(false);
     };
 
+    const isBattleActive = status?.is_active || false;
+
     return (
         <div className="page-container">
             <header className="page-header">
@@ -73,6 +77,7 @@ function BattleArena() {
                         value={config.attacker_model}
                         onChange={e => setConfig({ ...config, attacker_model: e.target.value })}
                         className="select-input"
+                        disabled={isBattleActive}
                     >
                         {models.options.map(m => <option key={m} value={m}>🔴 {m}</option>)}
                     </select>
@@ -81,8 +86,18 @@ function BattleArena() {
                         value={config.defender_model}
                         onChange={e => setConfig({ ...config, defender_model: e.target.value })}
                         className="select-input"
+                        disabled={isBattleActive}
                     >
                         {models.options.map(m => <option key={m} value={m}>🔵 {m}</option>)}
+                    </select>
+                    <span className="vs">|</span>
+                    <select
+                        value={config.judge_model}
+                        onChange={e => setConfig({ ...config, judge_model: e.target.value })}
+                        className="select-input"
+                        disabled={isBattleActive}
+                    >
+                        {models.options.map(m => <option key={m} value={m}>⚖️ {m}</option>)}
                     </select>
                     <button onClick={startBattle} disabled={loading} className="btn primary">
                         <RefreshCw size={16} /> New Battle

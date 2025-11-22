@@ -9,11 +9,12 @@ class BattleLoop:
     def __init__(self, 
                  attacker_model: str = None, 
                  defender_model: str = None,
+                 judge_model: str = None,
                  initial_system_prompt: str = None):
         
         self.attacker = AttackerAgent(model=attacker_model)
         self.defender = DefenderAgent(model=defender_model, system_prompt=initial_system_prompt)
-        self.judge = JudgeAgent() # Judge usually uses default or config default
+        self.judge = JudgeAgent(model=judge_model)
         self.memory_bank = MemoryBank()
         self.history: List[Dict[str, Any]] = []
 
