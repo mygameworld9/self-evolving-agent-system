@@ -404,3 +404,33 @@ td {
   border-radius: 0.5rem;
   margin-bottom: 1rem;
 }
+
+/* Expandable Text */
+.expandable-text {
+  position: relative;
+}
+
+.expandable-text.collapsed .text-content {
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.expand-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  color: var(--accent-blue);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.2s;
+}
+
+.expand-btn:hover {
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+}

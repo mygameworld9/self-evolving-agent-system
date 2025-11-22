@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import { Play, SkipForward, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
-import Typewriter from './Typewriter';
+import ExpandableText from './ExpandableText';
 
 function BattleArena() {
     const [status, setStatus] = useState(null);
@@ -148,13 +148,13 @@ function BattleArena() {
                                     <strong>🔴 Attacker:</strong>
                                     <div className="bubble-text">
                                         {i === 0 ? (
-                                            <Typewriter
+                                            <ExpandableText
                                                 text={log.attack}
-                                                speed={15}
-                                                onComplete={() => setAttackerDone(true)}
+                                                isTyping={true}
+                                                onTypingComplete={() => setAttackerDone(true)}
                                             />
                                         ) : (
-                                            log.attack
+                                            <ExpandableText text={log.attack} isTyping={false} />
                                         )}
                                     </div>
                                 </div>
@@ -163,12 +163,12 @@ function BattleArena() {
                                     <div className="bubble-text">
                                         {i === 0 ? (
                                             attackerDone ? (
-                                                <Typewriter text={log.response} speed={15} />
+                                                <ExpandableText text={log.response} isTyping={true} />
                                             ) : (
                                                 <span className="typing-indicator">Waiting for attack...</span>
                                             )
                                         ) : (
-                                            log.response
+                                            <ExpandableText text={log.response} isTyping={false} />
                                         )}
                                     </div>
                                 </div>
