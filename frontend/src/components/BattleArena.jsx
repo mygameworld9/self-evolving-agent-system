@@ -157,6 +157,16 @@ function BattleArena() {
                                             <ExpandableText text={log.attack} isTyping={false} />
                                         )}
                                     </div>
+                                    {log.attacker_instruction && (
+                                        <div className="instruction-reveal">
+                                            <details>
+                                                <summary>🧠 View Internal Thought Process</summary>
+                                                <div className="instruction-content">
+                                                    <pre>{log.attacker_instruction}</pre>
+                                                </div>
+                                            </details>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="defender-bubble">
                                     <strong>🔵 Defender:</strong>

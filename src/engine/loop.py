@@ -56,7 +56,8 @@ class BattleLoop:
             "response": response,
             "breach": is_breach,
             "judge_reason": judge_result.get("reason"),
-            "system_prompt_snapshot": self.defender.current_system_prompt
+            "system_prompt_snapshot": self.defender.current_system_prompt,
+            "attacker_instruction": attack_result.get("attacker_instruction", "N/A")
         }
         self.history.append(round_log)
 
