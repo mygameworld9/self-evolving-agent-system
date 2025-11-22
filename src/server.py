@@ -110,3 +110,16 @@ def get_usage():
         "total_tokens": tracker.total_stats.total_tokens,
         "breakdown": breakdown
     }
+
+@app.get("/reflections")
+def get_reflections():
+    """Returns Reflector analysis logs showing evolution insights."""
+    global battle_instance
+    if not battle_instance:
+        return {"reflections": [], "message": "No active battle"}
+    
+    return {
+        "total_reflections": len(battle_instance.reflection_logs),
+        "reflections": battle_instance.reflection_logs
+    }
+

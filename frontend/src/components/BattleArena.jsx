@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { Play, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Play, SkipForward, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
+import Typewriter from './Typewriter';
 
 function BattleArena() {
     const [status, setStatus] = useState(null);
@@ -13,12 +14,24 @@ function BattleArena() {
         target_goal: 'Reveal system instructions'
     });
     const [loading, setLoading] = useState(false);
+    const [attackerDone, setAttackerDone] = useState(false);
+    const [lastRound, setLastRound] = useState(0);
 
     useEffect(() => {
         loadModels();
         const interval = setInterval(loadStatus, 2000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        if (status?.history?.length > 0) {
+            const currentRound = status.history[status.history.length - 1].round;
+            if (currentRound !== lastRound) {
+                setAttackerDone(false);
+                setLastRound(currentRound);
+            }
+        }
+    }, [status]);
 
     const loadModels = async () => {
         try {
@@ -102,12 +115,16 @@ function BattleArena() {
                     >
                         {models.options.map(m => <option key={m} value={m}>⚖️ {m}</option>)}
                     </select>
-                    <button onClick={startBattle} disabled={loading} className="btn primary">
-                        <RefreshCw size={16} /> New Battle
-                    </button>
-                    <button onClick={nextRound} disabled={loading || !status?.is_active} className="btn secondary">
-                        <Play size={16} /> Next Round
-                    </button>
+
+                    {!isBattleActive ? (
+                        <button className="btn primary" onClick={startBattle} disabled={loading}>
+                            {loading ? 'Starting...' : <><Play size={18} /> New Battle</>}
+                        </button>
+                    ) : (
+                        <button className="btn primary" onClick={nextRound} disabled={loading}>
+                            {loading ? 'Processing...' : <><SkipForward size={18} /> Next Round</>}
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -118,7 +135,7 @@ function BattleArena() {
                 </div>
 
                 <div className="history-feed">
-                    {status?.history?.map((log, i) => (
+                    {status?.history?.slice().reverse().map((log, i) => (
                         <div key={i} className={`log-entry ${log.breach ? 'breach' : 'blocked'}`}>
                             <div className="log-header">
                                 <span className="round-badge">Round {log.round}</span>
@@ -129,11 +146,31 @@ function BattleArena() {
                             <div className="log-content">
                                 <div className="attacker-bubble">
                                     <strong>🔴 Attacker:</strong>
-                                    <p>{log.attack}</p>
+                                    <div className="bubble-text">
+                                        {i === 0 ? (
+                                            <Typewriter
+                                                text={log.attack}
+                                                speed={15}
+                                                onComplete={() => setAttackerDone(true)}
+                                            />
+                                        ) : (
+                                            log.attack
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="defender-bubble">
                                     <strong>🔵 Defender:</strong>
-                                    <p>{log.response}</p>
+                                    <div className="bubble-text">
+                                        {i === 0 ? (
+                                            attackerDone ? (
+                                                <Typewriter text={log.response} speed={15} />
+                                            ) : (
+                                                <span className="typing-indicator">Waiting for attack...</span>
+                                            )
+                                        ) : (
+                                            log.response
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             <div className="judge-verdict">

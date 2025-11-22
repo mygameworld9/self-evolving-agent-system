@@ -33,5 +33,9 @@ export const api = {
   getUsage: async () => {
     const res = await fetch(`${BASE_URL}/usage`);
     return res.json();
+  },
+  getReflections: async () => {
+    const res = await fetch(`${BASE_URL}/reflections`);
+    return res.json();
   }
 };

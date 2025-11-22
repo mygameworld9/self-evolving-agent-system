@@ -5,7 +5,7 @@
         ]
 
         # Check if the user input matches any attack vector
-        detected_attack = None
+        det ected_attack = None
         for attack in attacks:
             if any(k in user_lower for k in attack['keywords']):
                 detected_attack = attack
