@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class OpenAIConfig(BaseModel):
-    base_url: str = "https://api.openai.com/v1"
-    model: str = "gpt-4o"
+    base_url: str = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    model: str = os.getenv("OPENAI_MODEL", "gpt-4o")
     api_key: Optional[str] = None
 
 class GoogleConfig(BaseModel):
@@ -29,8 +29,12 @@ class AgentConfig(BaseModel):
     memory_path: str = "./data/memory_bank.json"
 
 class ModelsConfig(BaseModel):
-    options: list[str] = ["gpt-4o", "gpt-3.5-turbo"]
-    defaults: dict[str, str] = {"attacker": "gpt-4o", "defender": "gpt-4o", "judge": "gpt-4o"}
+    options: list[str] = ["ep-o8xnuh-1761495136493063368", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest"]
+    defaults: dict[str, str] = {
+        "attacker": "ep-o8xnuh-1761495136493063368",
+        "defender": "ep-o8xnuh-1761495136493063368",
+        "judge": "ep-o8xnuh-1761495136493063368"
+    }
 
 class AppConfig(BaseModel):
     llm_openai: OpenAIConfig = Field(default_factory=OpenAIConfig)
@@ -60,6 +64,18 @@ def load_config(config_path: str = "config.toml") -> AppConfig:
         if "llm" not in toml_data: toml_data["llm"] = {}
         if "openai" not in toml_data["llm"]: toml_data["llm"]["openai"] = {}
         toml_data["llm"]["openai"]["api_key"] = openai_key
+
+    openai_base_url = os.getenv("OPENAI_BASE_URL")
+    if openai_base_url:
+        if "llm" not in toml_data: toml_data["llm"] = {}
+        if "openai" not in toml_data["llm"]: toml_data["llm"]["openai"] = {}
+        toml_data["llm"]["openai"]["base_url"] = openai_base_url
+
+    openai_model = os.getenv("OPENAI_MODEL")
+    if openai_model:
+        if "llm" not in toml_data: toml_data["llm"] = {}
+        if "openai" not in toml_data["llm"]: toml_data["llm"]["openai"] = {}
+        toml_data["llm"]["openai"]["model"] = openai_model
 
     # Google
     google_key = os.getenv("GOOGLE_API_KEY")

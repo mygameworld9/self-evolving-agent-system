@@ -16,6 +16,14 @@ services:
     volumes:
       - .:/app
 
+  frontend:
+    build: ./frontend
+    container_name: sea-agent-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+
   chromadb:
     image: chromadb/chroma:latest
     container_name: sea-agent-chroma

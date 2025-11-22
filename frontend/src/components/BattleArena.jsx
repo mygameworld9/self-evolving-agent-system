@@ -23,7 +23,10 @@ function BattleArena() {
     const loadModels = async () => {
         try {
             const data = await api.getModels();
-            setModels(data);
+            setModels({
+                options: data.models,
+                defaults: data.defaults
+            });
             setConfig(prev => ({
                 ...prev,
                 attacker_model: data.defaults.attacker,
