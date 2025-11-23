@@ -23,22 +23,36 @@ class BattleLoop:
         self.reflection_frequency = reflection_frequency
         self.reflection_logs: List[Dict[str, Any]] = []  # Store reflection analysis
 
-    def run_round(self, round_id: int, target_goal: str) -> Dict[str, Any]:
+    def run_round_generator(self, round_id: int, target_goal: str):
         """
-        Executes a single round of Act -> Defend -> Judge -> Log.
+        Generator that yields events for each phase of the round.
         """
         # 1. Attacker Generates
-        # Context includes previous attacks in this session to allow evolution
         attack_context = {
             "target_goal": target_goal,
             "previous_attacks": [h for h in self.history if h.get("round") < round_id]
         }
         attack_result = self.attacker.step(attack_context)
         attack_prompt = attack_result["attack_prompt"]
+        
+        yield {
+            "type": "attacker",
+            "data": {
+                "attack": attack_prompt,
+                "attacker_instruction": attack_result.get("attacker_instruction", "N/A")
+            }
+        }
 
         # 2. Defender Responds
         defend_result = self.defender.step({"attack_prompt": attack_prompt})
         response = defend_result["response"]
+        
+        yield {
+            "type": "defender",
+            "data": {
+                "response": response
+            }
+        }
 
         # 3. Judge Evaluates
         judge_result = self.judge.step({
@@ -48,6 +62,14 @@ class BattleLoop:
         })
         
         is_breach = judge_result.get("breach", False)
+        
+        yield {
+            "type": "judge",
+            "data": {
+                "breach": is_breach,
+                "judge_reason": judge_result.get("reason")
+            }
+        }
 
         # 4. Log & Distill (The Flywheel)
         round_log = {
@@ -75,40 +97,57 @@ class BattleLoop:
                 source="battle_loop"
             )
         else:
-            # Store failed attack (optional, maybe only interesting ones)
+            # Store failed attack (optional)
             pass
 
         # 6. Reflection (Every N rounds)
         if round_id % self.reflection_frequency == 0:
-            print(f"\n{'='*60}")
-            print(f"   🔍 REFLECTOR ANALYSIS (Round {round_id})")
-            print(f"{'='*60}")
-            try:
-                insights = self.reflector.analyze_battle(self.history)
-                
-                # Store reflection with timestamp
-                reflection_entry = {
-                    "round": round_id,
-                    "insights": insights,
-                    "total_rounds_analyzed": len(self.history)
-                }
-                self.reflection_logs.append(reflection_entry)
-                
-                # Log insights details
-                print(f"\n   📊 Analyzed {len(self.history)} rounds")
-                for i, insight in enumerate(insights, 1):
-                    print(f"\n   Insight {i}: {insight.get('type', 'unknown')}")
-                    print(f"   Category: {insight.get('category', 'N/A')}")
-                    print(f"   Content: {insight.get('content', 'N/A')[:150]}...")
-                    
-                    # Store in Memory Bank
-                    self.memory_bank.add_reflection(insight)
-                
-                print(f"\n   ✅ Stored {len(insights)} insights in Memory Bank")
-                print(f"{'='*60}\n")
-            except Exception as e:
-                print(f"   ❌ Reflection failed: {e}")
+            self._run_reflection(round_id)
 
-        return round_log
+        yield {
+            "type": "end",
+            "data": round_log
+        }
+
+    def _run_reflection(self, round_id: int):
+        print(f"\n{'='*60}")
+        print(f"   🔍 REFLECTOR ANALYSIS (Round {round_id})")
+        print(f"{'='*60}")
+        try:
+            insights = self.reflector.analyze_battle(self.history)
+            
+            # Store reflection with timestamp
+            reflection_entry = {
+                "round": round_id,
+                "insights": insights,
+                "total_rounds_analyzed": len(self.history)
+            }
+            self.reflection_logs.append(reflection_entry)
+            
+            # Log insights details
+            print(f"\n   📊 Analyzed {len(self.history)} rounds")
+            for i, insight in enumerate(insights, 1):
+                print(f"\n   Insight {i}: {insight.get('type', 'unknown')}")
+                print(f"   Category: {insight.get('category', 'N/A')}")
+                print(f"   Content: {insight.get('content', 'N/A')[:150]}...")
+                
+                # Store in Memory Bank
+                self.memory_bank.add_reflection(insight)
+            
+            print(f"\n   ✅ Stored {len(insights)} insights in Memory Bank")
+            print(f"{'='*60}\n")
+        except Exception as e:
+            print(f"   ❌ Reflection failed: {e}")
+
+    def run_round(self, round_id: int, target_goal: str) -> Dict[str, Any]:
+        """
+        Executes a single round synchronously by consuming the generator.
+        """
+        gen = self.run_round_generator(round_id, target_goal)
+        last_result = None
+        for result in gen:
+            if result["type"] == "end":
+                last_result = result["data"]
+        return last_result
 
 

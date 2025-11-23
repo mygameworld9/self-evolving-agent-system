@@ -26,6 +26,30 @@ export const api = {
     });
     return res.json();
   },
+  streamNextRound: async (targetGoal, onEvent) => {
+    const response = await fetch(`${BASE_URL}/battle/next/stream?target_goal=${encodeURIComponent(targetGoal)}`);
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            onEvent(data);
+          } catch (e) {
+            console.error('Error parsing stream data:', e);
+          }
+        }
+      }
+    }
+  },
   getStatus: async () => {
     const res = await fetch(`${BASE_URL}/battle/status`);
     return res.json();

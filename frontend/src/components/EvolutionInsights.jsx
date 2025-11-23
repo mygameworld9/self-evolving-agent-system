@@ -55,7 +55,7 @@ const EvolutionInsights = () => {
                 </div>
                 <button onClick={loadReflections} className="btn secondary" disabled={loading}>
                     <RefreshCw className={loading ? 'spinning' : ''} />
-                    Refresh
+                    {loading ? 'Refreshing...' : 'Refresh'}
                 </button>
             </div>
 

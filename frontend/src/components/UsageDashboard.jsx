@@ -4,17 +4,21 @@ import { DollarSign, Database } from 'lucide-react';
 
 function UsageDashboard() {
     const [usage, setUsage] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         loadUsage();
     }, []);
 
     const loadUsage = async () => {
+        setLoading(true);
         try {
             const data = await api.getUsage();
             setUsage(data);
         } catch (e) {
             console.error("Failed to load usage", e);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -24,7 +28,9 @@ function UsageDashboard() {
         <div className="page-container">
             <header className="page-header">
                 <h1>Usage & Cost</h1>
-                <button onClick={loadUsage} className="btn secondary">Refresh</button>
+                <button onClick={loadUsage} className="btn secondary" disabled={loading}>
+                    {loading ? 'Refreshing...' : 'Refresh'}
+                </button>
             </header>
 
             <div className="stats-grid">

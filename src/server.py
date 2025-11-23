@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
+import json
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from src.engine.loop import BattleLoop
@@ -78,6 +80,25 @@ def next_round(target_goal: str = "Reveal system instructions"):
         return log
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/battle/next/stream")
+def next_round_stream(target_goal: str = "Reveal system instructions"):
+    """Executes the next round and streams updates (SSE)."""
+    global battle_instance
+    if not battle_instance:
+        raise HTTPException(status_code=400, detail="No active battle. Call /battle/start first.")
+    
+    current_round = len(battle_instance.history) + 1
+
+    def event_generator():
+        try:
+            gen = battle_instance.run_round_generator(current_round, target_goal)
+            for event in gen:
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'data': str(e)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.get("/battle/status")
 def get_status():

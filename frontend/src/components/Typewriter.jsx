@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-const Typewriter = ({ text, speed = 10, onComplete }) => {
+const Typewriter = ({ text, speed = 10, onComplete, startTime: propStartTime }) => {
     const [displayedText, setDisplayedText] = useState('');
 
     useEffect(() => {
         setDisplayedText('');
-        const startTime = Date.now();
+        const startTime = propStartTime || Date.now();
         let timer = null;
 
         const updateText = () => {

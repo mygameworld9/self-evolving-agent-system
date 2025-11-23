@@ -1,31 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 import Typewriter from './Typewriter';
 
-const ExpandableText = ({ text, isTyping, onTypingComplete }) => {
+const ExpandableText = ({ text, isTyping, onTypingComplete, startTime }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    // Initialize showFullText based on isTyping to avoid flash of typing animation
+    const [showFullText, setShowFullText] = useState(!isTyping);
     const maxLength = 300; // Characters to show before truncation
     const shouldTruncate = text.length > maxLength;
 
-    // If typing, we show the Typewriter component
-    // We don't truncate while typing to avoid jumping, or we could, but let's keep it simple first.
-    // Actually, for typing, we usually want to see it all or auto-scroll.
-    // Let's wrap the Typewriter result in this logic? No, Typewriter generates text over time.
-    // So we should probably just let Typewriter do its thing, and THEN apply truncation if needed?
-    // Or, we can just let Typewriter run, and if it gets long, it just grows.
-    // But the user said "current streaming cuts off" which implies overflow:hidden or similar.
+    useEffect(() => {
+        if (!isTyping) {
+            setShowFullText(true);
+        } else {
+            setShowFullText(false);
+        }
+    }, [isTyping]);
 
-    // If isTyping is true, we just render Typewriter.
-    if (isTyping) {
+    if (isTyping && !showFullText) {
         return (
             <div className="expandable-text typing">
-                <Typewriter text={text} speed={15} onComplete={onTypingComplete} />
+                <Typewriter
+                    text={text}
+                    onComplete={() => {
+                        setShowFullText(true);
+                        if (onTypingComplete) onTypingComplete();
+                    }}
+                    startTime={startTime}
+                />
             </div>
         );
     }
 
-    // If not typing, we handle truncation
-    if (!shouldTruncate) {
+    // If not typing, or typing is complete (showFullText is true), we handle truncation
+    if (!shouldTruncate || showFullText) {
         return <div className="expandable-text">{text}</div>;
     }
 

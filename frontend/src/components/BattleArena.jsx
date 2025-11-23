@@ -14,24 +14,27 @@ function BattleArena() {
         target_goal: 'Reveal system instructions'
     });
     const [loading, setLoading] = useState(false);
-    const [attackerDone, setAttackerDone] = useState(false);
-    const [lastRound, setLastRound] = useState(0);
+    const [streamingRound, setStreamingRound] = useState(null);
 
     useEffect(() => {
         loadModels();
-        const interval = setInterval(loadStatus, 2000);
-        return () => clearInterval(interval);
-    }, []);
 
-    useEffect(() => {
-        if (status?.history?.length > 0) {
-            const currentRound = status.history[status.history.length - 1].round;
-            if (currentRound !== lastRound) {
-                setAttackerDone(false);
-                setLastRound(currentRound);
+        // Use Web Worker for background polling
+        const worker = new Worker(new URL('../workers/pollingWorker.js', import.meta.url));
+
+        worker.onmessage = (e) => {
+            if (e.data.type === 'TICK') {
+                loadStatus();
             }
-        }
-    }, [status]);
+        };
+
+        worker.postMessage({ type: 'START', interval: 2000 });
+
+        return () => {
+            worker.postMessage({ type: 'STOP' });
+            worker.terminate();
+        };
+    }, []);
 
     const loadModels = async () => {
         try {
@@ -73,12 +76,56 @@ function BattleArena() {
 
     const nextRound = async () => {
         setLoading(true);
+        setStreamingRound({
+            round: (status?.history?.length || 0) + 1,
+            attack: '',
+            response: '',
+            breach: false,
+            judge_reason: 'Waiting for judge...',
+            attacker_instruction: '',
+            current_phase: 'attacker' // attacker, defender, judge
+        });
+
         try {
-            await api.nextRound(config.target_goal);
-            await loadStatus();
+            await api.streamNextRound(config.target_goal, (event) => {
+                if (event.type === 'attacker') {
+                    setStreamingRound(prev => ({
+                        ...prev,
+                        attack: event.data.attack,
+                        attacker_instruction: event.data.attacker_instruction,
+                        current_phase: 'defender'
+                    }));
+                } else if (event.type === 'defender') {
+                    setStreamingRound(prev => ({
+                        ...prev,
+                        response: event.data.response,
+                        current_phase: 'judge'
+                    }));
+                } else if (event.type === 'judge') {
+                    setStreamingRound(prev => ({
+                        ...prev,
+                        breach: event.data.breach,
+                        judge_reason: event.data.judge_reason,
+                        current_phase: 'complete'
+                    }));
+                } else if (event.type === 'end') {
+                    setStreamingRound(null);
+                    loadStatus();
+                } else if (event.type === 'error') {
+                    console.error("Stream error:", event.data);
+                    alert("Error in stream: " + event.data);
+                }
+            });
         } catch (e) {
             alert("Error running round: " + e.message);
+            setStreamingRound(null);
         }
+        setLoading(false);
+    };
+
+    const manualRefresh = async () => {
+        setLoading(true);
+        await loadStatus();
         setLoading(false);
     };
 
@@ -125,6 +172,10 @@ function BattleArena() {
                             {loading ? 'Processing...' : <><SkipForward size={18} /> Next Round</>}
                         </button>
                     )}
+
+                    <button className="btn secondary icon-only" onClick={manualRefresh} title="Force Refresh" disabled={loading}>
+                        <RefreshCw size={18} className={loading ? 'spinning' : ''} />
+                    </button>
                 </div>
             </header>
 
@@ -135,7 +186,56 @@ function BattleArena() {
                 </div>
 
                 <div className="history-feed">
-                    {status?.history?.slice().reverse().map((log, i) => (
+                    {streamingRound && (
+                        <div className="log-entry streaming-entry">
+                            <div className="log-header">
+                                <span className="round-badge">Round {streamingRound.round}</span>
+                                <span className="status-badge">
+                                    {streamingRound.current_phase === 'judge' || streamingRound.current_phase === 'complete' ? (
+                                        streamingRound.breach ? <><AlertTriangle size={14} /> BREACH</> : <><CheckCircle size={14} /> BLOCKED</>
+                                    ) : (
+                                        <span className="pulsing">⏳ IN PROGRESS ({streamingRound.current_phase.toUpperCase()})</span>
+                                    )}
+                                </span>
+                            </div>
+                            <div className="log-content">
+                                <div className="attacker-bubble">
+                                    <strong>🔴 Attacker:</strong>
+                                    <div className="bubble-text">
+                                        {streamingRound.attack ? (
+                                            <ExpandableText text={streamingRound.attack} isTyping={true} />
+                                        ) : <span className="typing-indicator">Generating attack...</span>}
+                                    </div>
+                                    {streamingRound.attacker_instruction && (
+                                        <div className="instruction-reveal">
+                                            <details>
+                                                <summary>🧠 View Internal Thought Process</summary>
+                                                <div className="instruction-content">
+                                                    <pre>{streamingRound.attacker_instruction}</pre>
+                                                </div>
+                                            </details>
+                                        </div>
+                                    )}
+                                </div>
+                                {streamingRound.current_phase !== 'attacker' && (
+                                    <div className="defender-bubble">
+                                        <strong>🔵 Defender:</strong>
+                                        <div className="bubble-text">
+                                            {streamingRound.response ? (
+                                                <ExpandableText text={streamingRound.response} isTyping={true} />
+                                            ) : <span className="typing-indicator">Generating defense...</span>}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            {(streamingRound.current_phase === 'judge' || streamingRound.current_phase === 'complete') && (
+                                <div className="judge-verdict">
+                                    <strong>⚖️ Judge:</strong> {streamingRound.judge_reason}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    {status?.history?.slice().reverse().map((log) => (
                         <div key={log.round} className={`log-entry ${log.breach ? 'breach' : 'blocked'}`}>
                             <div className="log-header">
                                 <span className="round-badge">Round {log.round}</span>
@@ -147,15 +247,7 @@ function BattleArena() {
                                 <div className="attacker-bubble">
                                     <strong>🔴 Attacker:</strong>
                                     <div className="bubble-text">
-                                        {i === 0 ? (
-                                            <ExpandableText
-                                                text={log.attack}
-                                                isTyping={true}
-                                                onTypingComplete={() => setAttackerDone(true)}
-                                            />
-                                        ) : (
-                                            <ExpandableText text={log.attack} isTyping={false} />
-                                        )}
+                                        <ExpandableText text={log.attack} isTyping={false} />
                                     </div>
                                     {log.attacker_instruction && (
                                         <div className="instruction-reveal">
@@ -171,15 +263,7 @@ function BattleArena() {
                                 <div className="defender-bubble">
                                     <strong>🔵 Defender:</strong>
                                     <div className="bubble-text">
-                                        {i === 0 ? (
-                                            attackerDone ? (
-                                                <ExpandableText text={log.response} isTyping={true} />
-                                            ) : (
-                                                <span className="typing-indicator">Waiting for attack...</span>
-                                            )
-                                        ) : (
-                                            <ExpandableText text={log.response} isTyping={false} />
-                                        )}
+                                        <ExpandableText text={log.response} isTyping={false} />
                                     </div>
                                 </div>
                             </div>
