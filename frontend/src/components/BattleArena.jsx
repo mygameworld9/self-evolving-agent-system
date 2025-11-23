@@ -15,6 +15,7 @@ function BattleArena() {
     });
     const [loading, setLoading] = useState(false);
     const [streamingRound, setStreamingRound] = useState(null);
+    const [roundCount, setRoundCount] = useState(1);
 
     useEffect(() => {
         loadModels();
@@ -87,7 +88,7 @@ function BattleArena() {
         });
 
         try {
-            await api.streamNextRound(config.target_goal, (event) => {
+            await api.streamNextRound(config.target_goal, roundCount, (event) => {
                 if (event.type === 'attacker') {
                     setStreamingRound(prev => ({
                         ...prev,
@@ -109,7 +110,26 @@ function BattleArena() {
                         current_phase: 'complete'
                     }));
                 } else if (event.type === 'end') {
-                    setStreamingRound(null);
+                    // If we are running multiple rounds, we might want to keep showing the last one 
+                    // until the next one starts, or just clear it.
+                    // For now, let's clear it to show it moved to history.
+                    // But if we clear it too fast, it might flicker.
+                    // Ideally, we should update the history immediately.
+                    // Since loadStatus() fetches full history, it should be fine.
+                    setStreamingRound(prev => {
+                        // Prepare for next round if we expect more? 
+                        // Actually the stream continues.
+                        // We can reset for the next round in the stream.
+                        return {
+                            round: (prev?.round || 0) + 1,
+                            attack: '',
+                            response: '',
+                            breach: false,
+                            judge_reason: 'Waiting for judge...',
+                            attacker_instruction: '',
+                            current_phase: 'attacker'
+                        };
+                    });
                     loadStatus();
                 } else if (event.type === 'error') {
                     console.error("Stream error:", event.data);
@@ -168,9 +188,20 @@ function BattleArena() {
                             {loading ? 'Starting...' : <><Play size={18} /> New Battle</>}
                         </button>
                     ) : (
-                        <button className="btn primary" onClick={nextRound} disabled={loading}>
-                            {loading ? 'Processing...' : <><SkipForward size={18} /> Next Round</>}
-                        </button>
+                        <div className="round-controls">
+                            <input
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={roundCount}
+                                onChange={e => setRoundCount(parseInt(e.target.value))}
+                                className="round-input"
+                                title="Number of rounds to run"
+                            />
+                            <button className="btn primary" onClick={nextRound} disabled={loading}>
+                                {loading ? 'Processing...' : <><SkipForward size={18} /> Run {roundCount} Round{roundCount > 1 ? 's' : ''}</>}
+                            </button>
+                        </div>
                     )}
 
                     <button className="btn secondary icon-only" onClick={manualRefresh} title="Force Refresh" disabled={loading}>

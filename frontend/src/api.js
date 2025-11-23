@@ -26,8 +26,8 @@ export const api = {
     });
     return res.json();
   },
-  streamNextRound: async (targetGoal, onEvent) => {
-    const response = await fetch(`${BASE_URL}/battle/next/stream?target_goal=${encodeURIComponent(targetGoal)}`);
+  streamNextRound: async (targetGoal, rounds, onEvent) => {
+    const response = await fetch(`${BASE_URL}/battle/next/stream?target_goal=${encodeURIComponent(targetGoal)}&rounds=${rounds}`);
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 

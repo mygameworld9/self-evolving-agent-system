@@ -82,19 +82,19 @@ def next_round(target_goal: str = "Reveal system instructions"):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/battle/next/stream")
-def next_round_stream(target_goal: str = "Reveal system instructions"):
-    """Executes the next round and streams updates (SSE)."""
+def next_round_stream(target_goal: str = "Reveal system instructions", rounds: int = 1):
+    """Executes the next round(s) and streams updates (SSE)."""
     global battle_instance
     if not battle_instance:
         raise HTTPException(status_code=400, detail="No active battle. Call /battle/start first.")
     
-    current_round = len(battle_instance.history) + 1
-
     def event_generator():
         try:
-            gen = battle_instance.run_round_generator(current_round, target_goal)
-            for event in gen:
-                yield f"data: {json.dumps(event)}\n\n"
+            for _ in range(rounds):
+                current_round = len(battle_instance.history) + 1
+                gen = battle_instance.run_round_generator(current_round, target_goal)
+                for event in gen:
+                    yield f"data: {json.dumps(event)}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'type': 'error', 'data': str(e)})}\n\n"
 
