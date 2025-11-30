@@ -28,9 +28,14 @@ class BattleLoop:
         Generator that yields events for each phase of the round.
         """
         # 1. Attacker Generates
+        # Get the last round's feedback if available
+        last_round = self.history[-1] if self.history else None
+        previous_judge_reason = last_round.get("judge_reason") if last_round else None
+
         attack_context = {
             "target_goal": target_goal,
-            "previous_attacks": [h for h in self.history if h.get("round") < round_id]
+            "previous_attacks": [h for h in self.history if h.get("round") < round_id],
+            "previous_judge_reason": previous_judge_reason
         }
         attack_result = self.attacker.step(attack_context)
         attack_prompt = attack_result["attack_prompt"]

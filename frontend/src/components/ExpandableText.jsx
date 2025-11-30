@@ -7,6 +7,9 @@ const ExpandableText = ({ text, isTyping, onTypingComplete, startTime }) => {
     // Initialize showFullText based on isTyping to avoid flash of typing animation
     const [showFullText, setShowFullText] = useState(!isTyping);
     const maxLength = 300; // Characters to show before truncation
+
+    if (!text) return null;
+
     const shouldTruncate = text.length > maxLength;
 
     useEffect(() => {

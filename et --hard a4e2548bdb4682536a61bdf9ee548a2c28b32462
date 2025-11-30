@@ -1,0 +1,19 @@
+[33m211bd96[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{0}: reset: moving to HEAD~2
+[33m957188b[m HEAD@{1}: reset: moving to HEAD~2
+[33ma4e2548[m HEAD@{2}: reset: moving to HEAD~1
+[33m0ca484b[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{3}: commit: feat: Implement Genetic Algorithm for Attacker Evolution
+[33ma4e2548[m HEAD@{4}: commit: feat: Add Judge Ensemble and Utility Guardrails
+[33m63bfa12[m HEAD@{5}: commit: del
+[33m957188b[m HEAD@{6}: commit: Implement streaming responses
+[33m21f9ec7[m HEAD@{7}: commit: feat: mixed strategy attacker, fix frontend rendering and throttling
+[33m211bd96[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{8}: commit: feat: expose attacker instructions in frontend and backend
+[33m9c93e66[m HEAD@{9}: commit: fix: frontend syntax errors and add expandable text component
+[33m3b79852[m HEAD@{10}: commit: feat: enhance evolution logic, sequential streaming, and judge fixes
+[33m3f1fc61[m HEAD@{11}: commit: Complete Docker deployment with 5-round battle system
+[33mc3ecdbc[m HEAD@{12}: commit: Update .gitignore and Docker configuration
+[33me2740b9[m[33m ([m[1;31mmain/main[m[33m, [m[1;31mmain/HEAD[m[33m)[m HEAD@{13}: reset: moving to origin/main
+[33m2fce743[m HEAD@{14}: reset: moving to HEAD~1
+[33me2740b9[m[33m ([m[1;31mmain/main[m[33m, [m[1;31mmain/HEAD[m[33m)[m HEAD@{15}: commit: feat: Add Web Frontend (FastAPI + React)
+[33m2fce743[m HEAD@{16}: Branch: renamed refs/heads/main to refs/heads/main
+[33m2fce743[m HEAD@{18}: Branch: renamed refs/heads/master to refs/heads/main
+[33m2fce743[m HEAD@{20}: commit (initial): Initial commit: Self-Evolving Multi-Agent System

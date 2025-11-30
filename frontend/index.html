@@ -1,13 +1,82 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    // Polyfill/Mock storage to prevent crashes in strict environments
+    // Must run before ANY other code
+    (function () {
+      var noop = function () { };
+      var mockStorage = {
+        getItem: function () { return null; },
+        setItem: noop,
+        removeItem: noop,
+        clear: noop,
+        length: 0,
+        key: function () { return null; }
+      };
+
+      var mockAsyncStorage = {
+        open: function () {
+          return Promise.resolve({
+            result: {
+              createObjectStore: noop,
+              transaction: function () {
+                return {
+                  objectStore: function () {
+                    return {
+                      get: function () { return { onsuccess: noop }; },
+                      put: function () { return { onsuccess: noop }; }
+                    };
+                  }
+                };
+              }
+            },
+            addEventListener: noop,
+            removeEventListener: noop
+          });
+        },
+        deleteDatabase: function () { return Promise.resolve(); },
+        match: function () { return Promise.resolve(); },
+        has: function () { return Promise.resolve(false); },
+        keys: function () { return Promise.resolve([]); }
+      };
+
+      try { window.localStorage; } catch (e) { Object.defineProperty(window, 'localStorage', { value: mockStorage }); }
+      try { window.sessionStorage; } catch (e) { Object.defineProperty(window, 'sessionStorage', { value: mockStorage }); }
+      try { window.indexedDB; } catch (e) { Object.defineProperty(window, 'indexedDB', { value: mockAsyncStorage }); }
+
+      if (!window.caches) { Object.defineProperty(window, 'caches', { value: mockAsyncStorage }); }
+      if (!window.cookieStore) { Object.defineProperty(window, 'cookieStore', { value: { get: function () { return Promise.resolve(null); }, set: function () { return Promise.resolve(); } } }); }
+
+      // Global error swallow for storage issues
+      window.addEventListener('error', function (e) {
+        if (e.message && (e.message.includes('Access to storage') || e.message.includes('SecurityError'))) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.warn('Suppressed global storage error:', e.message);
+          return true;
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function (e) {
+        if (e.reason && e.reason.message && (e.reason.message.includes('Access to storage') || e.reason.message.includes('SecurityError'))) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.warn('Suppressed global storage promise rejection:', e.reason.message);
+        }
+      }, true);
+    })();
+  </script>
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>frontend</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>
